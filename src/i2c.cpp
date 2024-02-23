@@ -63,7 +63,7 @@ void i2c::interrupt()
 
   switch (state) {
     case i2c_host_state::bus_error: {
-      m_status = std::errc::io_error;
+      m_status = error_state::io_error;
       set_mask = i2c_control::assert_acknowledge | i2c_control::stop;
       break;
     }
@@ -89,7 +89,7 @@ void i2c::interrupt()
     case i2c_host_state::peripheral_address_write_sent_received_nack: {
       clear_mask = i2c_control::start;
       transaction_finished = true;
-      m_status = std::errc::no_such_device_or_address;
+      m_status = error_state::no_such_device;
       set_mask = i2c_control::stop;
       break;
     }
@@ -132,7 +132,7 @@ void i2c::interrupt()
     }
     case i2c_host_state::peripheral_address_read_sent_received_nack: {
       clear_mask = i2c_control::start;
-      m_status = std::errc::no_such_device_or_address;
+      m_status = error_state::no_such_device;
       transaction_finished = true;
       set_mask = i2c_control::stop;
       break;
@@ -177,114 +177,81 @@ void i2c::interrupt()
   }
 }
 
-result<i2c> i2c::get(std::uint8_t p_bus_number, const i2c::settings& p_settings)
+i2c::i2c(std::uint8_t p_bus_number, const i2c::settings& p_settings)
 {
-  i2c::bus_info bus_info{};
-
-  if (p_bus_number <= 2) {
-    // "Supported i2c busses are 0, 1, and 2!";
-  }
-
   // UM10562: Chapter 7: LPC408x/407x I/O configuration page 13
-  if (p_bus_number == 0) {
-    /// Definition for i2c bus 0 for LPC40xx.
-    bus_info = {
-      .peripheral_id = peripheral::i2c0,
-      .irq_number = irq::i2c0,
-      .sda = pin(1, 30),
-      .sda_function = 0b100,
-      .scl = pin(1, 31),
-      .scl_function = 0b100,
-    };
-  } else if (p_bus_number == 1) {
-    /// Definition for i2c bus 1 for LPC40xx.
-    bus_info = {
-      .peripheral_id = peripheral::i2c1,
-      .irq_number = irq::i2c1,
-      .sda = pin(0, 0),
-      .sda_function = 0b011,
-      .scl = pin(0, 1),
-      .scl_function = 0b011,
-    };
-  } else if (p_bus_number == 2) {
-    /// Definition for i2c bus 2 for LPC40xx.
-    bus_info = {
-      .peripheral_id = peripheral::i2c2,
-      .irq_number = irq::i2c2,
-      .sda = pin(0, 10),
-      .sda_function = 0b010,
-      .scl = pin(0, 11),
-      .scl_function = 0b010,
-    };
+  switch (p_bus_number) {
+    case 0:
+      /// Definition for i2c bus 0 for LPC40xx.
+      m_bus = {
+        .peripheral_id = peripheral::i2c0,
+        .irq_number = irq::i2c0,
+        .sda = pin(1, 30),
+        .sda_function = 0b100,
+        .scl = pin(1, 31),
+        .scl_function = 0b100,
+      };
+      break;
+    case 1:
+      /// Definition for i2c bus 1 for LPC40xx.
+      m_bus = {
+        .peripheral_id = peripheral::i2c1,
+        .irq_number = irq::i2c1,
+        .sda = pin(0, 0),
+        .sda_function = 0b011,
+        .scl = pin(0, 1),
+        .scl_function = 0b011,
+      };
+      break;
+    case 2:
+      /// Definition for i2c bus 2 for LPC40xx.
+      m_bus = {
+        .peripheral_id = peripheral::i2c2,
+        .irq_number = irq::i2c2,
+        .sda = pin(0, 10),
+        .sda_function = 0b010,
+        .scl = pin(0, 11),
+        .scl_function = 0b010,
+      };
+      break;
+    default: {
+      safe_throw(hal::operation_not_supported(this));
+      break;
+    }
   }
 
   cortex_m::interrupt::initialize<value(irq::max)>();
-
-  i2c i2c_bus(bus_info);
-  HAL_CHECK(i2c_bus.driver_configure(p_settings));
-
-  return i2c_bus;
-}
-
-i2c::i2c(i2c&& p_other) noexcept
-  : m_bus(p_other.m_bus)
-  , m_write_iterator(p_other.m_write_iterator)
-  , m_write_end(p_other.m_write_end)
-  , m_read_iterator(p_other.m_read_iterator)
-  , m_read_end(p_other.m_read_end)
-  , m_status(p_other.m_status)
-  , m_address(p_other.m_address)
-  , m_busy(p_other.m_busy)
-{
-  p_other.m_moved = true;
-  setup_interrupt();
-}
-
-i2c& i2c::operator=(i2c&& p_other) noexcept
-{
-  m_bus = p_other.m_bus;
-  m_write_iterator = p_other.m_write_iterator;
-  m_write_end = p_other.m_write_end;
-  m_read_iterator = p_other.m_read_iterator;
-  m_read_end = p_other.m_read_end;
-  m_status = p_other.m_status;
-  m_address = p_other.m_address;
-  m_busy = p_other.m_busy;
-  m_moved = false;
-
-  p_other.m_moved = true;
-  setup_interrupt();
-  return *this;
+  i2c::driver_configure(p_settings);
 }
 
 i2c::~i2c()
 {
-  if (!m_moved) {
-    disable(m_bus);
-  }
+  disable(m_bus);
 }
 
-i2c::i2c(bus_info p_bus)
+i2c::i2c(const bus_info& p_bus, const i2c::settings& p_settings)
   : m_bus(p_bus)
 {
+  cortex_m::interrupt::initialize<value(irq::max)>();
+  i2c::driver_configure(p_settings);
 }
 
-status i2c::driver_configure(const settings& p_settings)
+void i2c::driver_configure(const settings& p_settings)
 {
   auto* reg = get_i2c_reg(m_bus.peripheral_id);
 
   // Setup i2c operating frequency
-  const auto input_clock = clock::get().get_frequency(m_bus.peripheral_id);
+  const auto input_clock = get_frequency(m_bus.peripheral_id);
   const auto clock_divider = input_clock / p_settings.clock_rate;
   const auto high_side_clocks = clock_divider * m_bus.duty_cycle;
   const auto low_side_clocks = clock_divider - high_side_clocks;
 
   if (low_side_clocks < 1.0f || high_side_clocks < 1.0f) {
-    return hal::new_error(std::errc::result_out_of_range);
+    safe_throw(hal::operation_not_supported(this));
   }
 
   // Power on peripheral
-  power(m_bus.peripheral_id).on();
+  power_on(m_bus.peripheral_id);
 
   // Setup pins for SDA and SCL
   pin(m_bus.sda)
@@ -310,8 +277,6 @@ status i2c::driver_configure(const settings& p_settings)
   reg->control_set = i2c_control::interface_enable;
 
   setup_interrupt();
-
-  return hal::success();
 }
 
 void i2c::setup_interrupt()
@@ -339,15 +304,14 @@ void i2c::setup_interrupt()
   cortex_m::interrupt(hal::value(m_bus.irq_number)).enable(handler);
 }
 
-result<i2c::transaction_t> i2c::driver_transaction(
-  hal::byte p_address,
-  std::span<const hal::byte> p_data_out,
-  std::span<hal::byte> p_data_in,
-  hal::function_ref<hal::timeout_function> p_timeout)
+void i2c::driver_transaction(hal::byte p_address,
+                             std::span<const hal::byte> p_data_out,
+                             std::span<hal::byte> p_data_in,
+                             hal::function_ref<hal::timeout_function> p_timeout)
 {
   auto* reg = get_i2c_reg(m_bus.peripheral_id);
 
-  m_status = std::errc{};
+  m_status = error_state::no_error;
   m_address = p_address;
   m_write_iterator = p_data_out.begin();
   m_write_end = p_data_out.end();
@@ -360,13 +324,33 @@ result<i2c::transaction_t> i2c::driver_transaction(
 
   // i2c::interrupt() will set this to false when the transaction has finished.
   while (m_busy) {
-    HAL_CHECK(p_timeout());
+    try {
+      p_timeout();
+    } catch (...) {
+      // The expected exception is hal::timed_out, but it could be something
+      // else. Let rethrow the exception so the caller handle it.
+      // A better option here would be to use a std::scope_failure handler.
+      reg->control_set = i2c_control::stop;
+      throw;
+    }
   }
 
-  if (m_status != std::errc{}) {
-    return hal::new_error(m_status);
-  }
-
-  return transaction_t{};
+  switch (m_status) {
+    case error_state::no_error: {
+      break;
+    }
+    case error_state::no_such_device: {
+      safe_throw(hal::no_such_device(m_address, this));
+      break;
+    }
+    case error_state::io_error: {
+      safe_throw(hal::io_error(this));
+      break;
+    }
+    case error_state::arbitration_lost: {
+      safe_throw(hal::resource_unavailable_try_again(this));
+      break;
+    }
+  };
 }
 }  // namespace hal::lpc40

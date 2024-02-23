@@ -16,6 +16,8 @@ cmake_minimum_required(VERSION 3.20)
 
 project(demos LANGUAGES CXX)
 
+message(WARNING "LIBHAL_PLATFORM = ${LIBHAL_PLATFORM}")
+
 libhal_build_demos(
   DEMOS
   adc
@@ -27,10 +29,18 @@ libhal_build_demos(
   uart
   pwm
   spi
+  blank
 
   PACKAGES
   libhal-lpc40
+  prebuilt-picolibc
 
   LINK_LIBRARIES
   libhal::lpc40
+  picolibc
+
+  LINK_FLAGS
+  -Wl,--wrap=__cxa_allocate_exception
+  -Wl,--wrap=__cxa_free_exception
+  -Wl,--wrap=__cxa_call_unexpected
 )

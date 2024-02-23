@@ -22,8 +22,8 @@
 #include "pwm_reg.hpp"
 
 namespace hal::lpc40 {
-
-pwm_reg_t* get_pwm_reg(peripheral p_id)
+namespace {
+[[nodiscard]] pwm_reg_t* get_pwm_reg(peripheral p_id)
 {
   if (p_id == peripheral::pwm0) {
     return pwm_reg0;
@@ -106,7 +106,7 @@ void setup(pwm::channel& p_channel)
   /// register to be reset to 0 when it is equal to the match register 0.
   static constexpr auto pwm0_reset = bit_mask::from<1>();
 
-  power(p_channel.peripheral_id).on();
+  power_on(p_channel.peripheral_id);
 
   pwm_reg_t* reg = get_pwm_reg(p_channel.peripheral_id);
 
@@ -133,52 +133,43 @@ void setup(pwm::channel& p_channel)
   // Enable the PWM output channel
   enable(reg, true);
 }
+}  // namespace
 
-pwm::pwm(channel p_channel)
-  : m_channel(p_channel)
+pwm::pwm(std::uint8_t p_peripheral,  // NOLINT
+         std::uint8_t p_channel)
+  : m_channel{}
 {
-}
-
-result<pwm> pwm::get(std::uint8_t p_peripheral,  // NOLINT
-                     std::uint8_t p_channel)     // NOLINT
-{
-  if (p_peripheral > 1) {
+  bool valid_peripheral = p_peripheral > 1;
+  bool valid_channel = p_channel == 0 || p_channel > 6;
+  bool valid_driver = valid_peripheral && valid_channel;
+  if (not valid_driver) {
     // "LPC40 series microcontrollers only have PWM0 and PWM1."
-    return hal::new_error(std::errc::invalid_argument);
+    safe_throw(hal::operation_not_supported(this));
   }
 
-  if (p_channel == 0 || p_channel > 6) {
-    // "LPC40 series microcontrollers only have channels 1 to 6.";
-    return hal::new_error(std::errc::invalid_argument);
-  }
-
-  channel new_channel;
-  new_channel.index = p_channel;
+  m_channel.index = p_channel;
 
   if (p_peripheral == 0) {
-    new_channel.peripheral_id = peripheral::pwm0;
-    new_channel.pwm_pin = pin(3, 16 + (p_channel - 1));
-    new_channel.pin_function = 0b010;
+    m_channel.peripheral_id = peripheral::pwm0;
+    m_channel.pwm_pin = pin(3, 16 + (p_channel - 1));
+    m_channel.pin_function = 0b010;
   } else if (p_peripheral == 1) {
-    new_channel.peripheral_id = peripheral::pwm1;
-    new_channel.pwm_pin = pin(2, 0 + (p_channel - 1));
-    new_channel.pin_function = 0b001;
+    m_channel.peripheral_id = peripheral::pwm1;
+    m_channel.pwm_pin = pin(2, 0 + (p_channel - 1));
+    m_channel.pin_function = 0b001;
   }
 
-  pwm pwm_object(new_channel);
-  setup(new_channel);
-
-  return pwm_object;
+  setup(m_channel);
 }
 
-result<pwm::frequency_t> pwm::driver_frequency(hertz p_frequency)
+void pwm::driver_frequency(hertz p_frequency)
 {
   pwm_reg_t* reg = get_pwm_reg(m_channel.peripheral_id);
 
-  const auto input_clock = clock::get().get_frequency(m_channel.peripheral_id);
+  const auto input_clock = get_frequency(m_channel.peripheral_id);
 
   if (p_frequency >= input_clock) {
-    return new_error(std::errc::invalid_argument);
+    safe_throw(hal::operation_not_supported(this));
   }
 
   // Get the current duty cycle so we can match it to the updated frequency.
@@ -200,12 +191,10 @@ result<pwm::frequency_t> pwm::driver_frequency(hertz p_frequency)
   enable(reg, true);
 
   // Update the duty cycle based on the previous percentage
-  HAL_CHECK(duty_cycle(previous_duty_cycle));
-
-  return frequency_t{};
+  duty_cycle(previous_duty_cycle);
 }
 
-result<pwm::duty_cycle_t> pwm::driver_duty_cycle(float p_duty_cycle)
+void pwm::driver_duty_cycle(float p_duty_cycle)
 {
   pwm_reg_t* reg = get_pwm_reg(m_channel.peripheral_id);
 
@@ -217,7 +206,5 @@ result<pwm::duty_cycle_t> pwm::driver_duty_cycle(float p_duty_cycle)
   // a match_register_0 match occurs. This way the PWM duty cycle does ont
   // change instantaneously.
   bit_modify(reg->load_enable_register).set(bit_mask::from(m_channel.index));
-
-  return duty_cycle_t{};
 }
 }  // namespace hal::lpc40

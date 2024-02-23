@@ -15,12 +15,12 @@
 # limitations under the License.
 
 from conan import ConanFile
-from conan.tools.cmake import CMake, cmake_layout
+from conan.tools.cmake import CMake, CMakeToolchain,  cmake_layout
 
 
 class demos(ConanFile):
-    settings = "compiler", "build_type", "os", "arch"
-    generators = "CMakeToolchain", "CMakeDeps", "VirtualBuildEnv"
+    settings = "compiler", "build_type", "os", "arch", "libc"
+    generators = "CMakeDeps", "VirtualBuildEnv"
     options = {"platform": ["ANY"]}
     default_options = {"platform": "unspecified"}
 
@@ -33,10 +33,16 @@ class demos(ConanFile):
 
     def build_requirements(self):
         self.tool_requires("cmake/3.27.1")
-        self.tool_requires("libhal-cmake-util/3.0.1")
+        self.tool_requires("libhal-cmake-util/4.0.1")
 
     def requirements(self):
-        self.requires("libhal-lpc40/2.1.6")
+        self.requires(f"prebuilt-picolibc/{self.settings.compiler.version}")
+        self.requires("libhal-lpc40/[>=3.0.0]")
+
+    def generate(self):
+        tc = CMakeToolchain(self)
+        tc.cache_variables["CONAN_LIBC"] = str(self.settings.libc)
+        tc.generate()
 
     def build(self):
         cmake = CMake(self)
