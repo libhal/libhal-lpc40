@@ -52,71 +52,18 @@ struct lpc_message
   uint32_t data_b = 0;
 };
 
-status configure_baud_rate(const can::port& p_port,
-                           const can::settings& p_settings)
-{
-  using namespace hal::literals;
-
-  auto* reg = get_can_reg(p_port.id);
-
-  if (p_settings.baud_rate > 100.0_kHz &&
-      !clock::get().config().use_external_oscillator) {
-    return hal::new_error(std::errc::invalid_argument,
-                          error_t::requires_usage_of_external_oscillator);
-  }
-
-  const auto frequency = clock::get().get_frequency(p_port.id);
-  auto baud_rate_prescalar = hal::is_valid(p_settings, frequency);
-
-  if (!baud_rate_prescalar) {
-    return hal::new_error(std::errc::invalid_argument,
-                          error_t::baud_rate_impossible);
-  }
-
-  // Hold the results in RAM rather than altering the register directly
-  // multiple times.
-  bit_modify bus_timing(reg->BTR);
-
-  const auto sync_jump = p_settings.synchronization_jump_width - 1;
-  const auto tseg1 =
-    (p_settings.propagation_delay + p_settings.phase_segment1) - 1;
-  const auto tseg2 = p_settings.phase_segment2 - 1;
-  const auto final_baudrate_prescale = baud_rate_prescalar.value() - 1;
-
-  // Used to compensate for positive and negative edge phase errors. Defines
-  // how much the sample point can be shifted.
-  // These time segments determine the location of the "sample point".
-  bus_timing
-    .insert<can_bus_timing::sync_jump_width>(
-      static_cast<std::uint32_t>(sync_jump))
-    .insert<can_bus_timing::time_segment1>(static_cast<std::uint32_t>(tseg1))
-    .insert<can_bus_timing::time_segment2>(static_cast<std::uint32_t>(tseg2))
-    .insert<can_bus_timing::prescalar>(
-      static_cast<std::uint32_t>(final_baudrate_prescale));
-
-  if (p_settings.baud_rate < 100.0_kHz) {
-    // The bus is sampled 3 times (recommended for low speeds, 100kHz is
-    // considered HIGH).
-    bus_timing.insert<can_bus_timing::sampling>(1U);
-  } else {
-    bus_timing.insert<can_bus_timing::sampling>(0U);
-  }
-
-  return success();
-}
-
-void enable_acceptance_filter()
+void enable_acceptance_filter() noexcept
 {
   can_acceptance_filter->acceptance_filter =
     value(can_commands::accept_all_messages);
 }
 
-[[maybe_unused]] bool has_data(can_reg_t* p_reg)
+[[maybe_unused]] bool has_data(can_reg_t* p_reg) noexcept
 {
   return bit_extract<can_global_status::receive_buffer>(p_reg->GSR);
 }
 
-can::message_t receive(can_reg_t* p_reg)
+can::message_t receive(can_reg_t* p_reg) noexcept
 {
   static constexpr auto id_mask = bit_mask::from<0, 28>();
   can::message_t message;
@@ -148,29 +95,6 @@ can::message_t receive(can_reg_t* p_reg)
   p_reg->CMR = value(can_commands::release_rx_buffer);
 
   return message;
-}
-
-status setup(const can::port& p_port, const can::settings& p_settings)
-{
-  auto* reg = get_can_reg(p_port.id);
-
-  /// Power on CAN BUS peripheral
-  power(p_port.id).on();
-
-  /// Configure pins
-  p_port.td.function(p_port.td_function_code);
-  p_port.rd.function(p_port.rd_function_code);
-
-  // Enable reset mode in order to write to CAN registers.
-  bit_modify(reg->MOD).set<can_mode::reset>();
-
-  HAL_CHECK(configure_baud_rate(p_port, p_settings));
-  enable_acceptance_filter();
-
-  // Disable reset mode, enabling the device
-  bit_modify(reg->MOD).clear<can_mode::reset>();
-
-  return success();
 }
 
 /// Convert message into the registers LPC40xx can bus registers.
@@ -220,13 +144,87 @@ can_lpc_message message_to_registers(const can::message_t& p_message)
 }
 }  // namespace
 
-result<can> can::get(std::uint8_t p_port_number,
-                     const can::settings& p_settings)
+void can::configure_baud_rate(const can::port& p_port,
+                              const can::settings& p_settings)
 {
-  can::port port;
+  using namespace hal::literals;
 
+  auto* reg = get_can_reg(p_port.id);
+  const auto frequency = get_frequency(p_port.id);
+
+  bool external_oscillator_used = using_external_oscillator();
+  bool baud_rate_above_100khz = p_settings.baud_rate > 100.0_kHz;
+  auto baud_rate_prescalar = hal::is_valid(p_settings, frequency);
+
+  bool valid_configuration = external_oscillator_used &&
+                             baud_rate_above_100khz &&
+                             baud_rate_prescalar.has_value();
+
+  if (valid_configuration) {
+    safe_throw(hal::operation_not_supported(this));
+  }
+
+  // Hold the results in RAM rather than altering the register directly
+  // multiple times.
+  bit_modify bus_timing(reg->BTR);
+
+  const auto sync_jump = p_settings.synchronization_jump_width - 1;
+  const auto tseg1 =
+    (p_settings.propagation_delay + p_settings.phase_segment1) - 1;
+  const auto tseg2 = p_settings.phase_segment2 - 1;
+
+  std::uint32_t final_baudrate_prescale = 0;
+  if (baud_rate_prescalar.has_value()) {
+    final_baudrate_prescale = baud_rate_prescalar.value() - 1;
+  }
+
+  // Used to compensate for positive and negative edge phase errors. Defines
+  // how much the sample point can be shifted.
+  // These time segments determine the location of the "sample point".
+  bus_timing
+    .insert<can_bus_timing::sync_jump_width>(
+      static_cast<std::uint32_t>(sync_jump))
+    .insert<can_bus_timing::time_segment1>(static_cast<std::uint32_t>(tseg1))
+    .insert<can_bus_timing::time_segment2>(static_cast<std::uint32_t>(tseg2))
+    .insert<can_bus_timing::prescalar>(
+      static_cast<std::uint32_t>(final_baudrate_prescale));
+
+  if (p_settings.baud_rate < 100.0_kHz) {
+    // The bus is sampled 3 times (recommended for low speeds, 100kHz is
+    // considered HIGH).
+    bus_timing.insert<can_bus_timing::sampling>(1U);
+  } else {
+    bus_timing.insert<can_bus_timing::sampling>(0U);
+  }
+}
+
+void can::setup(const can::port& p_port, const can::settings& p_settings)
+{
+  auto* reg = get_can_reg(p_port.id);
+
+  cortex_m::interrupt::initialize<value(irq::max)>();
+
+  /// Power on CAN BUS peripheral
+  power_on(p_port.id);
+
+  /// Configure pins
+  p_port.td.function(p_port.td_function_code);
+  p_port.rd.function(p_port.rd_function_code);
+
+  // Enable reset mode in order to write to CAN registers.
+  bit_modify(reg->MOD).set<can_mode::reset>();
+
+  configure_baud_rate(p_port, p_settings);
+  enable_acceptance_filter();
+
+  // Disable reset mode, enabling the device
+  bit_modify(reg->MOD).clear<can_mode::reset>();
+}
+
+can::can(std::uint8_t p_port_number, const can::settings& p_settings)
+{
   if (p_port_number == 1) {
-    port = can::port{
+    m_port = can::port{
       .td = pin(0, 1),
       .td_function_code = 1,
       .rd = pin(0, 0),
@@ -235,7 +233,7 @@ result<can> can::get(std::uint8_t p_port_number,
       .irq_number = irq::can,
     };
   } else if (p_port_number == 2) {
-    port = can::port{
+    m_port = can::port{
       .td = pin(2, 8),
       .td_function_code = 1,
       .rd = pin(2, 7),
@@ -244,45 +242,15 @@ result<can> can::get(std::uint8_t p_port_number,
       .irq_number = irq::can,
     };
   } else {
-    return hal::new_error(std::errc::invalid_argument);
+    safe_throw(hal::operation_not_supported(this));
   }
 
-  HAL_CHECK(setup(port, p_settings));
-
-  can can_channel(port);
-  return can_channel;
-}
-
-can::can(can&& p_other) noexcept
-{
-  m_port = p_other.m_port;
-  m_receive_handler = p_other.m_receive_handler;
-
-  driver_on_receive(m_receive_handler);
-
-  p_other.m_moved = true;
-}
-
-can& can::operator=(can&& p_other) noexcept
-{
-  m_port = p_other.m_port;
-  m_receive_handler = p_other.m_receive_handler;
-
-  driver_on_receive(m_receive_handler);
-
-  p_other.m_moved = true;
-
-  return *this;
+  setup(m_port, p_settings);
 }
 
 can::~can()
 {
-  if (m_moved) {
-    return;
-  }
-
   auto* reg = get_can_reg(m_port.id);
-
   // Disable generating an interrupt request by this CAN peripheral, but leave
   // the interrupt enabled. We must NOT disable the interrupt via Arm's NVIC
   // as it could be used by the other CAN peripheral.
@@ -294,18 +262,18 @@ can::~can()
  *
  * @param p_port - CAN port information
  */
-can::can(port p_port)
+can::can(const port& p_port, const can::settings& p_settings)
   : m_port(p_port)
 {
-  cortex_m::interrupt::initialize<value(irq::max)>();
+  setup(p_port, p_settings);
 }
 
-status can::driver_configure(const can::settings& p_settings)
+void can::driver_configure(const can::settings& p_settings)
 {
   return setup(m_port, p_settings);
 }
 
-result<can::send_t> can::driver_send(const message_t& p_message)
+void can::driver_send(const message_t& p_message)
 {
   auto* reg = get_can_reg(m_port.id);
   auto can_message_registers = message_to_registers(p_message);
@@ -318,7 +286,7 @@ result<can::send_t> can::driver_send(const message_t& p_message)
     // Check if any buffer is available.
     if (bit_extract<can_buffer_status::bus_status>(status_register) ==
         can_buffer_status::bus_off) {
-      return new_error(std::errc::network_down);
+      throw std::errc::network_down;
     } else if (bit_extract<can_buffer_status::tx1_released>(status_register)) {
       reg->TFI1 = can_message_registers.frame;
       reg->TID1 = can_message_registers.id;
@@ -342,18 +310,14 @@ result<can::send_t> can::driver_send(const message_t& p_message)
       sent = true;
     }
   }
-
-  return send_t{};
 }
 
-status can::driver_bus_on()
+void can::driver_bus_on()
 {
   auto* reg = get_can_reg(m_port.id);
   // When the device is in "bus-off" mode, the mode::reset bit is set to '1'. To
   // re-enable the device, clear the reset bit.
   bit_modify(reg->MOD).clear<can_mode::reset>();
-
-  return success();
 }
 
 void can::driver_on_receive(hal::callback<can::handler> p_receive_handler)
