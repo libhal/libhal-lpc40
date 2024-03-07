@@ -16,6 +16,7 @@
 #include <span>
 
 #include <libhal-armcortex/dwt_counter.hpp>
+#include <libhal-exceptions/control.hpp>
 #include <libhal-lpc40/clock.hpp>
 #include <libhal-lpc40/constants.hpp>
 #include <libhal-lpc40/output_pin.hpp>
@@ -25,20 +26,7 @@
 // (.cpp) files.
 extern void application();
 
-int main()
-{
-  using namespace hal::literals;
-  // Change the input frequency to match the frequency of the crystal attached
-  // to the external OSC pins.
-  hal::lpc40::maximum(10.0_MHz);
-
-  // Run the application
-  application();
-
-  return 0;
-}
-
-[[noreturn]] void hal_terminate() noexcept
+[[noreturn]] void terminate_handler() noexcept
 {
   hal::cortex_m::dwt_counter steady_clock(
     hal::lpc40::get_frequency(hal::lpc40::peripheral::cpu));
@@ -58,62 +46,17 @@ int main()
   }
 }
 
-namespace __cxxabiv1 {                                       // NOLINT
-std::terminate_handler __terminate_handler = hal_terminate;  // NOLINT
-}
-
-extern "C"
+int main()
 {
-  void _exit([[maybe_unused]] int rc)
-  {
-    std::terminate();
-  }
+  using namespace hal::literals;
+  // Change the input frequency to match the frequency of the crystal attached
+  // to the external OSC pins.
+  hal::lpc40::maximum(10.0_MHz);
 
-  int kill(int, int)
-  {
-    return -1;
-  }
+  hal::set_terminate(terminate_handler);
 
-  struct _reent* _impure_ptr = nullptr;  // NOLINT
+  // Run the application
+  application();
 
-  int getpid()
-  {
-    return 1;
-  }
-
-  std::array<std::uint8_t, 256> exception_storage{};
-
-  void* __wrap___cxa_allocate_exception(unsigned int p_size)  // NOLINT
-  {
-    // Size of the GCC exception object header
-    constexpr size_t header_size = 128;
-
-    if (exception_storage.size() < header_size + p_size) {
-      std::terminate();
-    }
-
-    // Required for GCC's impl to work correctly as it assumes that all bytes
-    // default to 0.
-    exception_storage.fill(0);
-    return exception_storage.data() + header_size;
-  }
-
-  void __wrap___cxa_call_unexpected(void*)  // NOLINT
-  {
-    std::terminate();
-  }
-
-  void __wrap___cxa_free_exception(void*)  // NOLINT
-  {
-    // Clear the contents of the storage buffer as the exception runtime expects
-    // the contents to already be cleared.
-    exception_storage.fill(0);
-  }
-  void __assert_func([[maybe_unused]] const char* p_file,
-                     [[maybe_unused]] int p_line,
-                     [[maybe_unused]] const char* p_function,
-                     [[maybe_unused]] const char* p_failed_expr)
-  {
-    abort();
-  }
-}  // extern "C"
+  return 0;
+}

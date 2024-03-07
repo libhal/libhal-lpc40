@@ -34,9 +34,9 @@ class libhal_lpc40_conan(ConanFile):
     topics = ("arm", "microcontroller", "lpc", "lpc40", "lpc40xx", "lpc4072",
               "lpc4074", "lpc4078", "lpc4088")
     settings = "compiler", "build_type", "os", "arch"
-    exports_sources = ("include/*", "linker_scripts/*", "tests/*", "LICENSE",
-                       "CMakeLists.txt", "src/*")
-    generators = "CMakeToolchain", "CMakeDeps", "VirtualBuildEnv"
+
+    python_requires = "libhal-bootstrap/[^0.0.2]"
+    python_requires_extend = "libhal-bootstrap.library"
 
     options = {
         "platform": ["ANY"],
@@ -53,71 +53,15 @@ class libhal_lpc40_conan(ConanFile):
                 self.options.platform == "lpc4074" or
                 self.options.platform == "lpc4072")
 
-    @property
-    def _min_cppstd(self):
-        return "20"
-
-    @property
-    def _compilers_minimum_version(self):
-        return {
-            "gcc": "11",
-            "clang": "14",
-            "apple-clang": "14.0.0"
-        }
-
-    @property
-    def _bare_metal(self):
-        return self.settings.os == "baremetal"
-
-    def validate(self):
-        if self.settings.get_safe("compiler.cppstd"):
-            check_min_cppstd(self, self._min_cppstd)
-
-    def build_requirements(self):
-        self.tool_requires("cmake/3.27.1")
-        self.tool_requires("libhal-cmake-util/4.0.1")
-        self.test_requires("boost-ext-ut/1.1.9")
-
     def requirements(self):
-        self.requires("libhal/[^3.0.0]", transitive_headers=True)
-        self.requires("libhal-util/[^4.0.0]")
         self.requires("libhal-armcortex/[^3.0.0]", transitive_headers=True)
         self.requires("ring-span-lite/[^0.6.0]")
 
-    def layout(self):
-        cmake_layout(self)
-
-    def build(self):
-        cmake = CMake(self)
-        cmake.configure()
-        cmake.build()
-
-    def package(self):
-        copy(self,
-             "LICENSE",
-             dst=os.path.join(self.package_folder, "licenses"),
-             src=self.source_folder)
-        copy(self,
-             "*.h",
-             dst=os.path.join(self.package_folder, "include"),
-             src=os.path.join(self.source_folder, "include"))
-        copy(self,
-             "*.hpp",
-             dst=os.path.join(self.package_folder, "include"),
-             src=os.path.join(self.source_folder, "include"))
-        copy(self,
-             "*.ld",
-             dst=os.path.join(self.package_folder, "linker_scripts"),
-             src=os.path.join(self.source_folder, "linker_scripts"))
-
-        cmake = CMake(self)
-        cmake.install()
-
     def package_info(self):
-        self.cpp_info.set_property("cmake_target_name", "libhal::lpc40")
         self.cpp_info.libs = ["libhal-lpc40"]
+        self.cpp_info.set_property("cmake_target_name", "libhal::lpc40")
 
-        if self._bare_metal and self._use_linker_script:
+        if self.settings.os == "baremetal" and self._use_linker_script:
             linker_path = os.path.join(self.package_folder, "linker_scripts")
             link_script = "-Tlibhal-lpc40/" + \
                 str(self.options.platform) + ".ld"
