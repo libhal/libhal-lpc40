@@ -31,14 +31,9 @@ libhal_build_demos(
 
   PACKAGES
   libhal-lpc40
-  prebuilt-picolibc
+  libhal-exceptions
 
   LINK_LIBRARIES
   libhal::lpc40
-  picolibc
-
-  LINK_FLAGS
-  -Wl,--wrap=__cxa_allocate_exception
-  -Wl,--wrap=__cxa_free_exception
-  -Wl,--wrap=__cxa_call_unexpected
+  libhal::exceptions
 )
