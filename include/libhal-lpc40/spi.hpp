@@ -48,14 +48,16 @@ public:
   /**
    * @brief Construct a new spi object
    *
-   * @param p_bus
-   * @param p_settings
+   * @param p_bus - bus number to use
+   * @param p_settings - spi settings to achieve
+   * @throws hal::operation_not_supported - if the p_bus is not 0, 1, or 2 or if
+   * the spi settings could not be achieved.
    */
   spi(std::uint8_t p_bus, const spi::settings& p_settings = {});
   /**
-   * @brief Construct a new spi object
+   * @brief Construct a new spi object using bus info directly
    *
-   * @param p_bus
+   * @param p_bus - Full bus information
    */
   spi(bus_info p_bus);
 

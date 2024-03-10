@@ -82,7 +82,7 @@ spi::spi(std::uint8_t p_bus_number, const spi::settings& p_settings)
     };
   } else {
     // "Supported spi busses are 0, 1, and 2!";
-    hal::safe_throw(std::errc::invalid_argument);
+    hal::safe_throw(hal::operation_not_supported(this));
   }
 
   spi::driver_configure(p_settings);

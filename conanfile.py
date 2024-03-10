@@ -35,7 +35,7 @@ class libhal_lpc40_conan(ConanFile):
               "lpc4074", "lpc4078", "lpc4088")
     settings = "compiler", "build_type", "os", "arch"
 
-    python_requires = "libhal-bootstrap/[^0.0.2]"
+    python_requires = "libhal-bootstrap/[^0.0.6]"
     python_requires_extend = "libhal-bootstrap.library"
 
     options = {
@@ -54,7 +54,7 @@ class libhal_lpc40_conan(ConanFile):
                 self.options.platform == "lpc4072")
 
     def requirements(self):
-        self.requires("libhal-armcortex/[^3.0.0]", transitive_headers=True)
+        self.requires("libhal-armcortex/[^3.0.1]", transitive_headers=True)
         self.requires("ring-span-lite/[^0.6.0]")
 
     def package_info(self):
