@@ -17,12 +17,13 @@
 #include <libhal-lpc40/input_pin.hpp>
 
 volatile bool run = false;
+bool pin_level = false;
 
 int main()
 {
   if (run) {
     auto input_pin = hal::lpc40::input_pin(2, 0);
-    printf("level (%d, %d) = %d\n", 2, 0, input_pin.level());
+    pin_level = input_pin.level();
   }
   return 0;
 }

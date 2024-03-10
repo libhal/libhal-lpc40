@@ -17,7 +17,6 @@
 #include <libhal-lpc40/constants.hpp>
 #include <libhal-lpc40/input_pin.hpp>
 #include <libhal-lpc40/output_pin.hpp>
-#include <libhal-util/serial.hpp>
 #include <libhal-util/steady_clock.hpp>
 
 void application()

@@ -31,9 +31,7 @@ libhal_build_demos(
 
   PACKAGES
   libhal-lpc40
-  libhal-exceptions
 
   LINK_LIBRARIES
   libhal::lpc40
-  libhal::exceptions
 )

@@ -19,7 +19,7 @@ from conan import ConanFile
 
 class TestPackageConan(ConanFile):
     settings = "os", "arch", "compiler", "build_type"
-    python_requires = "libhal-bootstrap/[^0.0.2]"
+    python_requires = "libhal-bootstrap/[^0.0.6]"
     python_requires_extend = "libhal-bootstrap.library_test_package"
 
     def requirements(self):
