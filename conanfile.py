@@ -15,9 +15,6 @@
 # limitations under the License.
 
 from conan import ConanFile
-from conan.tools.cmake import CMake, cmake_layout
-from conan.tools.files import copy
-from conan.tools.build import check_min_cppstd
 import os
 
 
@@ -57,22 +54,23 @@ class libhal_lpc40_conan(ConanFile):
         self.requires("libhal-armcortex/[^3.0.2]", transitive_headers=True)
         self.requires("ring-span-lite/[^0.6.0]")
 
+    def add_linker_scripts_to_link_flags(self):
+        platform = str(self.options.platform)
+        self.cpp_info.exelinkflags = [
+            "-L" + os.path.join(self.package_folder, "linker_scripts"),
+            "-T" + os.path.join("libhal-lpc40", platform + ".ld"),
+        ]
+
     def package_info(self):
         self.cpp_info.libs = ["libhal-lpc40"]
         self.cpp_info.set_property("cmake_target_name", "libhal::lpc40")
 
         if self.settings.os == "baremetal" and self._use_linker_script:
-            linker_path = os.path.join(self.package_folder, "linker_scripts")
-            link_script = "-Tlibhal-lpc40/" + \
-                str(self.options.platform) + ".ld"
-            self.cpp_info.exelinkflags = ["-L" + linker_path, link_script]
-            self.cpp_info.defines = [
-                f"LIBHAL_PLATFORM={str(self.options.platform)}", "LIBHAL_PLATFORM_LIBRARY=lpc40"
-            ]
-
-        self.buildenv_info.defines = [
-            f"LIBHAL_PLATFORM={str(self.options.platform)}", "LIBHAL_PLATFORM_LIBRARY=lpc40"
-        ]
+            self.add_linker_scripts_to_link_flags()
+            self.buildenv_info.define("LIBHAL_PLATFORM",
+                                      str(self.options.platform))
+            self.buildenv_info.define("LIBHAL_PLATFORM_LIBRARY",
+                                      "lpc40")
 
     def package_id(self):
         if self.info.options.get_safe("platform"):
