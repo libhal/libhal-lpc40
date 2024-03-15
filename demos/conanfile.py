@@ -24,4 +24,4 @@ class demos(ConanFile):
     def requirements(self):
         bootstrap = self.python_requires["libhal-bootstrap"]
         bootstrap.module.add_demo_requirements(self, is_platform=True)
-        self.requires("libhal-lpc40/[>=3.0.0]")
+        self.requires("libhal-lpc40/[^3.0.0 || latest]")
