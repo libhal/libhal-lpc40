@@ -156,11 +156,8 @@ void can::configure_baud_rate(const can::port& p_port,
   bool baud_rate_above_100khz = p_settings.baud_rate > 100.0_kHz;
   auto baud_rate_prescalar = hal::is_valid(p_settings, frequency);
 
-  bool valid_configuration = external_oscillator_used &&
-                             baud_rate_above_100khz &&
-                             baud_rate_prescalar.has_value();
-
-  if (valid_configuration) {
+  if ((baud_rate_above_100khz && not external_oscillator_used) ||
+      not baud_rate_prescalar.has_value()) {
     safe_throw(hal::operation_not_supported(this));
   }
 
