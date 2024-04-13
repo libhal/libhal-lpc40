@@ -139,9 +139,7 @@ pwm::pwm(std::uint8_t p_peripheral,  // NOLINT
          std::uint8_t p_channel)
   : m_channel{}
 {
-  bool valid_peripheral = p_peripheral <= 1;
-  bool valid_channel = 0 <= p_channel && p_channel <= 6;
-  bool valid_driver = valid_peripheral && valid_channel;
+  bool valid_driver = p_peripheral <= 1 && p_channel <= 6;
   if (not valid_driver) {
     // "LPC40 series microcontrollers only have PWM0 and PWM1."
     safe_throw(hal::operation_not_supported(this));
