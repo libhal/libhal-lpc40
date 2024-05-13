@@ -31,7 +31,7 @@ class libhal_lpc40_conan(ConanFile):
               "lpc4074", "lpc4078", "lpc4088")
     settings = "compiler", "build_type", "os", "arch"
 
-    python_requires = "libhal-bootstrap/[^1.0.0]"
+    python_requires = "libhal-bootstrap/[^2.0.0]"
     python_requires_extend = "libhal-bootstrap.library"
 
     options = {
@@ -50,7 +50,10 @@ class libhal_lpc40_conan(ConanFile):
                 self.options.platform == "lpc4072")
 
     def requirements(self):
-        self.requires("libhal-armcortex/[^3.0.2]", transitive_headers=True)
+        bootstrap = self.python_requires["libhal-bootstrap"]
+        bootstrap.module.add_library_requirements(
+            self, override_libhal_util_version="5.0.1")
+        self.requires("libhal-armcortex/[^4.0.0]", transitive_headers=True)
         self.requires("ring-span-lite/[^0.6.0]")
 
     def add_linker_scripts_to_link_flags(self):

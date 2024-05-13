@@ -12,9 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <array>
-#include <span>
-
 #include <libhal-armcortex/dwt_counter.hpp>
 #include <libhal-exceptions/control.hpp>
 #include <libhal-lpc40/clock.hpp>

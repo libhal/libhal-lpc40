@@ -20,6 +20,7 @@
 #include <libhal-lpc40/pin.hpp>
 #include <libhal-lpc40/power.hpp>
 #include <libhal-util/bit.hpp>
+#include <libhal-util/bit_limits.hpp>
 #include <libhal-util/can.hpp>
 #include <libhal-util/static_callable.hpp>
 
@@ -150,49 +151,51 @@ void can::configure_baud_rate(const can::port& p_port,
   using namespace hal::literals;
 
   auto* reg = get_can_reg(p_port.id);
-  const auto frequency = get_frequency(p_port.id);
+  const auto can_frequency = get_frequency(p_port.id);
 
   bool external_oscillator_used = using_external_oscillator();
   bool baud_rate_above_100khz = p_settings.baud_rate > 100.0_kHz;
-  auto baud_rate_prescalar = hal::is_valid(p_settings, frequency);
+  const auto valid_divider =
+    hal::calculate_can_bus_divider(can_frequency, p_settings.baud_rate);
 
   if ((baud_rate_above_100khz && not external_oscillator_used) ||
-      not baud_rate_prescalar.has_value()) {
+      not valid_divider) {
     safe_throw(hal::operation_not_supported(this));
   }
 
-  // Hold the results in RAM rather than altering the register directly
-  // multiple times.
-  bit_modify bus_timing(reg->BTR);
+  const auto dividers = valid_divider.value();
+  const auto prescale = dividers.clock_divider - 1U;
+  const auto sync_jump_width = dividers.synchronization_jump_width - 1U;
 
-  const auto sync_jump = p_settings.synchronization_jump_width - 1;
-  const auto tseg1 =
-    (p_settings.propagation_delay + p_settings.phase_segment1) - 1;
-  const auto tseg2 = p_settings.phase_segment2 - 1;
+  auto phase_segment1 =
+    (dividers.phase_segment1 + dividers.propagation_delay) - 1U;
+  auto phase_segment2 = dividers.phase_segment2 - 1U;
 
-  std::uint32_t final_baudrate_prescale = 0;
-  if (baud_rate_prescalar.has_value()) {
-    final_baudrate_prescale = baud_rate_prescalar.value() - 1;
+  constexpr auto segment2_bit_limit =
+    hal::bit_limits<can_bus_timing::time_segment2.width, std::uint32_t>::max();
+
+  // Check if phase segment 2 does not fit
+  if (phase_segment2 > segment2_bit_limit) {
+    // Take the extra time quanta and add it to the phase 1 segment
+    const auto phase_segment2_remainder = phase_segment2 - segment2_bit_limit;
+    phase_segment1 += phase_segment2_remainder;
+    // Cap phase segment 2 to the max available in the bit field
+    phase_segment2 = segment2_bit_limit;
   }
 
-  // Used to compensate for positive and negative edge phase errors. Defines
-  // how much the sample point can be shifted.
-  // These time segments determine the location of the "sample point".
-  bus_timing
-    .insert<can_bus_timing::sync_jump_width>(
-      static_cast<std::uint32_t>(sync_jump))
-    .insert<can_bus_timing::time_segment1>(static_cast<std::uint32_t>(tseg1))
-    .insert<can_bus_timing::time_segment2>(static_cast<std::uint32_t>(tseg2))
-    .insert<can_bus_timing::prescalar>(
-      static_cast<std::uint32_t>(final_baudrate_prescale));
-
+  std::uint8_t enable_triple_sampling = 0;
+  // The bus is sampled 3 times (recommended for low speeds, 100kHz is
+  // considered HIGH).
   if (p_settings.baud_rate < 100.0_kHz) {
-    // The bus is sampled 3 times (recommended for low speeds, 100kHz is
-    // considered HIGH).
-    bus_timing.insert<can_bus_timing::sampling>(1U);
-  } else {
-    bus_timing.insert<can_bus_timing::sampling>(0U);
+    enable_triple_sampling = 1U;
   }
+
+  bit_modify(reg->BTR)
+    .insert<can_bus_timing::sync_jump_width>(sync_jump_width)
+    .insert<can_bus_timing::time_segment1>(phase_segment1)
+    .insert<can_bus_timing::time_segment2>(phase_segment2)
+    .insert<can_bus_timing::prescalar>(prescale)
+    .insert<can_bus_timing::sampling>(enable_triple_sampling);
 }
 
 void can::setup(const can::port& p_port, const can::settings& p_settings)
