@@ -57,3 +57,14 @@ int main()
 
   return 0;
 }
+
+extern "C"
+{
+  // This gets rid of an issue with libhal-exceptions in Debug mode.
+  void __assert_func(const char*, int, const char*, const char*)
+  {
+    while (true) {
+      continue;
+    }
+  }
+}

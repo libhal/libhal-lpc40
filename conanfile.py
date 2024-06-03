@@ -52,9 +52,11 @@ class libhal_lpc40_conan(ConanFile):
     def requirements(self):
         bootstrap = self.python_requires["libhal-bootstrap"]
         bootstrap.module.add_library_requirements(
-            self, override_libhal_util_version="5.0.1")
+            self,
+            override_libhal_util_version="5.0.1",
+            override_libhal_version="4.2.0")
         self.requires("libhal-armcortex/[^4.0.0]", transitive_headers=True)
-        self.requires("ring-span-lite/[^0.6.0]", transitive_headers=True)
+        self.requires("ring-span-lite/[^0.7.0]", transitive_headers=True)
 
     def add_linker_scripts_to_link_flags(self):
         platform = str(self.options.platform)

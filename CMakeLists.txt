@@ -32,6 +32,8 @@ libhal_test_and_make_library(
   src/interrupt_pin.cpp
   src/adc.cpp
   src/spi.cpp
+  src/dma.cpp
+  src/stream_dac.cpp
 
   TEST_SOURCES
   tests/adc.test.cpp
@@ -43,6 +45,7 @@ libhal_test_and_make_library(
   tests/i2c.test.cpp
   tests/pwm.test.cpp
   tests/spi.test.cpp
+  tests/stream_dac.test.cpp
   tests/main.test.cpp
 
   PACKAGES
