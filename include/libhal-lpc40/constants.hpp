@@ -56,7 +56,8 @@ enum class peripheral : std::uint8_t
   gpdma = 29,
   ethernet = 30,
   usb = 31,
-  cpu,
+  cpu,  // always on
+  dac,  // always on
 };
 
 /// List of interrupt request numbers for this platform
