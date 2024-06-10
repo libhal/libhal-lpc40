@@ -177,7 +177,10 @@ void i2c::interrupt()
   }
 }
 
-i2c::i2c(std::uint8_t p_bus_number, const i2c::settings& p_settings)
+i2c::i2c(std::uint8_t p_bus_number,
+         const i2c::settings& p_settings,
+         hal::io_waiter& p_waiter)
+  : m_waiter(&p_waiter)
 {
   // UM10562: Chapter 7: LPC408x/407x I/O configuration page 13
   switch (p_bus_number) {
@@ -229,8 +232,11 @@ i2c::~i2c()
   disable(m_bus);
 }
 
-i2c::i2c(const bus_info& p_bus, const i2c::settings& p_settings)
+i2c::i2c(const bus_info& p_bus,
+         const i2c::settings& p_settings,
+         hal::io_waiter& p_waiter)
   : m_bus(p_bus)
+  , m_waiter(&p_waiter)
 {
   cortex_m::interrupt::initialize<value(irq::max)>();
   i2c::driver_configure(p_settings);
@@ -326,6 +332,7 @@ void i2c::driver_transaction(hal::byte p_address,
   while (m_busy) {
     try {
       p_timeout();
+      m_waiter->wait();
     } catch (...) {
       // The expected exception is hal::timed_out, but it could be something
       // else. Let rethrow the exception so the caller handle it.
