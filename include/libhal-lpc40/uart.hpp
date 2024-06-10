@@ -29,7 +29,7 @@ namespace hal::lpc40 {
  * frequency / 48. Otherwise this peripheral cannot guarantee proper
  * transmission or receive of bytes.
  */
-class uart : public hal::serial
+class uart final : public hal::serial
 {
 public:
   /// Port contains all of the information that the lpc40 uart port needs to

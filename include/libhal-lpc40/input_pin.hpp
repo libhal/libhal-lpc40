@@ -23,7 +23,7 @@ namespace hal::lpc40 {
  * @brief Input pin implementation for the lpc40xx
  *
  */
-class input_pin : public hal::input_pin
+class input_pin final : public hal::input_pin
 {
 public:
   /**

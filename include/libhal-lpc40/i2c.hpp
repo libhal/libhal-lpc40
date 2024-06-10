@@ -14,10 +14,8 @@
 
 #pragma once
 
-#include <atomic>
 #include <cstdint>
 #include <span>
-#include <system_error>
 
 #include <libhal/i2c.hpp>
 
@@ -25,7 +23,7 @@
 #include "pin.hpp"
 
 namespace hal::lpc40 {
-class i2c : public hal::i2c
+class i2c final : public hal::i2c
 {
 public:
   using write_iterator = std::span<const hal::byte>::iterator;

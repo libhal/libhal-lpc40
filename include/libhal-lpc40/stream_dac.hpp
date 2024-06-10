@@ -4,7 +4,7 @@
 #include <libhal/stream_dac.hpp>
 
 namespace hal::lpc40 {
-class stream_dac_u16 : public hal::stream_dac_u16
+class stream_dac_u16 final : public hal::stream_dac_u16
 {
 public:
   stream_dac_u16(hal::io_waiter& p_waiter);
@@ -15,7 +15,7 @@ private:
   hal::io_waiter* m_waiter;
 };
 
-class stream_dac_u8 : public hal::stream_dac_u8
+class stream_dac_u8 final : public hal::stream_dac_u8
 {
 public:
   stream_dac_u8(hal::io_waiter& p_waiter);
