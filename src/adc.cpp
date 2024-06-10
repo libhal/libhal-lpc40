@@ -26,17 +26,6 @@
 namespace hal::lpc40 {
 
 namespace {
-/**
- * @brief Convert channel info void pointer to an adc register map type
- *
- * @param p_pointer - pointer to the start
- * @return adc_reg_t*
- */
-adc_reg_t* to_reg_map(std::intptr_t p_pointer)
-{
-  return reinterpret_cast<adc_reg_t*>(p_pointer);  // NOLINT
-}
-
 void setup(const adc::channel& p_channel)
 {
   using namespace hal::literals;
@@ -61,24 +50,22 @@ void setup(const adc::channel& p_channel)
   const auto clock_divider = clock_frequency / p_channel.clock_rate;
   const auto clock_divider_int = static_cast<std::uint32_t>(clock_divider);
 
-  auto* reg = to_reg_map(p_channel.reg);
-
   // Activate burst mode (continuous sampling), power on ADC and set clock
   // divider.
-  hal::bit_modify(reg->control)
+  hal::bit_modify(adc_reg->control)
     .set<adc_control_register::burst_enable>()
     .set<adc_control_register::power_enable>()
     .insert<adc_control_register::clock_divider>(clock_divider_int);
 
   // Enable channel. Must be done in a separate write to memory than power on
   // and burst enable.
-  hal::bit_modify(reg->control)
+  hal::bit_modify(adc_reg->control)
     .set(bit_mask{ .position = p_channel.index, .width = 1 });
 }
 }  // namespace
 
 adc::adc(const channel& p_channel)
-  : m_sample(&to_reg_map(p_channel.reg)->data[p_channel.index])
+  : m_sample(&adc_reg->data[p_channel.index])
 {
   setup(p_channel);
 }

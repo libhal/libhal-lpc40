@@ -14,8 +14,6 @@
 
 #pragma once
 
-#include <array>
-#include <bit>
 #include <cstdint>
 
 #include <libhal/interrupt_pin.hpp>
@@ -25,7 +23,7 @@ namespace hal::lpc40 {
  * @brief Interrupt pin implementation for the lpc40xx
  *
  */
-class interrupt_pin : public hal::interrupt_pin
+class interrupt_pin final : public hal::interrupt_pin
 {
 public:
   /**

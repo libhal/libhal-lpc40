@@ -34,7 +34,7 @@ namespace hal::lpc40 {
  * channels within the peripheral block.
  *
  */
-class pwm : public hal::pwm
+class pwm final : public hal::pwm
 {
 public:
   /// Channel specific information

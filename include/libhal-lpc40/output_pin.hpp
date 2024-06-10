@@ -23,7 +23,7 @@ namespace hal::lpc40 {
  * @brief Output pin implementation for the lpc40xx
  *
  */
-class output_pin : public hal::output_pin
+class output_pin final : public hal::output_pin
 {
 public:
   /**

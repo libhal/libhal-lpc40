@@ -23,7 +23,7 @@
 #include "pin.hpp"
 
 namespace hal::lpc40 {
-class spi : public hal::spi
+class spi final : public hal::spi
 {
 public:
   /// Information used to configure the spi bus
