@@ -71,8 +71,8 @@ public:
        std::span<hal::byte> p_receive_working_buffer,
        const serial::settings& p_settings = {});
 
-  uart(uart& p_other) = delete;
-  uart& operator=(uart& p_other) = delete;
+  uart(uart const& p_other) = delete;
+  uart& operator=(uart const& p_other) = delete;
   uart(uart&& p_other) noexcept;
   uart& operator=(uart&& p_other) noexcept;
 

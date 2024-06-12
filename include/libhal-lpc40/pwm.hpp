@@ -59,8 +59,8 @@ public:
    */
   pwm(std::uint8_t p_peripheral, std::uint8_t p_channel);
 
-  pwm(pwm& p_other) = delete;
-  pwm& operator=(pwm& p_other) = delete;
+  pwm(pwm const& p_other) = delete;
+  pwm& operator=(pwm const& p_other) = delete;
   pwm(pwm&& p_other) noexcept = delete;
   pwm& operator=(pwm&& p_other) noexcept = delete;
   ~pwm() = default;

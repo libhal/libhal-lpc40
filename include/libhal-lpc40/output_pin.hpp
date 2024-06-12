@@ -37,8 +37,8 @@ public:
              std::uint8_t p_pin,
              const output_pin::settings& p_settings = {});
 
-  output_pin(output_pin& p_other) = delete;
-  output_pin& operator=(output_pin& p_other) = delete;
+  output_pin(output_pin const& p_other) = delete;
+  output_pin& operator=(output_pin const& p_other) = delete;
   output_pin(output_pin&& p_other) noexcept = delete;
   output_pin& operator=(output_pin&& p_other) noexcept = delete;
   ~output_pin() = default;

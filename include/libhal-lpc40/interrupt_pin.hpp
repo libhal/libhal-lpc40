@@ -36,8 +36,8 @@ public:
   interrupt_pin(std::uint8_t port,  // NOLINT
                 std::uint8_t pin,
                 const settings& p_settings = {});
-  interrupt_pin(interrupt_pin& p_other) = delete;
-  interrupt_pin& operator=(interrupt_pin& p_other) = delete;
+  interrupt_pin(interrupt_pin const& p_other) = delete;
+  interrupt_pin& operator=(interrupt_pin const& p_other) = delete;
   interrupt_pin(interrupt_pin&& p_other) noexcept = delete;
   interrupt_pin& operator=(interrupt_pin&& p_other) noexcept = delete;
   ~interrupt_pin();

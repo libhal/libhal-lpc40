@@ -84,8 +84,8 @@ public:
    */
   adc(const channel& p_channel);
 
-  adc(adc& p_other) = delete;
-  adc& operator=(adc& p_other) = delete;
+  adc(adc const& p_other) = delete;
+  adc& operator=(adc const& p_other) = delete;
   adc(adc&& p_other) noexcept = delete;
   adc& operator=(adc&& p_other) noexcept = delete;
   virtual ~adc() = default;
