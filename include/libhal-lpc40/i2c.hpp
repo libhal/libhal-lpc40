@@ -93,8 +93,8 @@ public:
       const i2c::settings& p_settings = {},
       hal::io_waiter& p_waiter = hal::polling_io_waiter());
 
-  i2c(i2c& p_other) = delete;
-  i2c& operator=(i2c& p_other) = delete;
+  i2c(i2c const& p_other) = delete;
+  i2c& operator=(i2c const& p_other) = delete;
   i2c(i2c&& p_other) noexcept = delete;
   i2c& operator=(i2c&& p_other) noexcept = delete;
   ~i2c();

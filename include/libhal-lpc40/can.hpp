@@ -52,8 +52,8 @@ public:
   can(std::uint8_t p_port, const can::settings& p_settings = {});
   can(const port& p_port, const can::settings& p_settings = {});
 
-  can(can& p_other) = delete;
-  can& operator=(can& p_other) = delete;
+  can(can const& p_other) = delete;
+  can& operator=(can const& p_other) = delete;
   can(can&& p_other) noexcept = delete;
   can& operator=(can&& p_other) noexcept = delete;
   ~can();

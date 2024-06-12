@@ -61,8 +61,8 @@ public:
    */
   spi(bus_info p_bus);
 
-  spi(spi& p_other) = delete;
-  spi& operator=(spi& p_other) = delete;
+  spi(spi const& p_other) = delete;
+  spi& operator=(spi const& p_other) = delete;
   spi(spi&& p_other) noexcept = delete;
   spi& operator=(spi&& p_other) noexcept = delete;
   ~spi();
