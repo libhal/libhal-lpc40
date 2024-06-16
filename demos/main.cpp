@@ -48,7 +48,7 @@ int main()
   using namespace hal::literals;
   // Change the input frequency to match the frequency of the crystal attached
   // to the external OSC pins.
-  hal::lpc40::maximum(10.0_MHz);
+  hal::lpc40::maximum(12.0_MHz);
 
   hal::set_terminate(terminate_handler);
 
