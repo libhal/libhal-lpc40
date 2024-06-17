@@ -125,11 +125,11 @@ adc::channel adc::get_predefined_channel_info(std::uint8_t p_channel)
 
 float adc::driver_read()
 {
-  constexpr auto max = bit_limits<12, size_t>::max();
-  constexpr auto max_float = static_cast<float>(max);
+  constexpr auto full_scale_max = bit_limits<12, size_t>::max();
+  constexpr auto full_scale_float = static_cast<float>(full_scale_max);
   // Read sample from peripheral memory
   auto sample_integer = hal::bit_extract<adc_data_register::result>(*m_sample);
   auto sample = static_cast<float>(sample_integer);
-  return sample / max_float;
+  return sample / full_scale_float;
 }
 }  // namespace hal::lpc40

@@ -40,7 +40,7 @@ public:
   interrupt_pin& operator=(interrupt_pin const& p_other) = delete;
   interrupt_pin(interrupt_pin&& p_other) noexcept = delete;
   interrupt_pin& operator=(interrupt_pin&& p_other) noexcept = delete;
-  ~interrupt_pin();
+  virtual ~interrupt_pin();
 
 private:
   void driver_configure(const settings& p_settings) override;

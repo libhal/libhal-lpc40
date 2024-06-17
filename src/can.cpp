@@ -17,6 +17,7 @@
 #include <libhal-armcortex/interrupt.hpp>
 #include <libhal-lpc40/clock.hpp>
 #include <libhal-lpc40/constants.hpp>
+#include <libhal-lpc40/interrupt.hpp>
 #include <libhal-lpc40/pin.hpp>
 #include <libhal-lpc40/power.hpp>
 #include <libhal-util/bit.hpp>
@@ -202,7 +203,7 @@ void can::setup(const can::port& p_port, const can::settings& p_settings)
 {
   auto* reg = get_can_reg(p_port.id);
 
-  cortex_m::interrupt::initialize<value(irq::max)>();
+  initialize_interrupts();
 
   /// Power on CAN BUS peripheral
   power_on(p_port.id);
@@ -333,7 +334,7 @@ void can::driver_on_receive(hal::callback<can::handler> p_receive_handler)
   };
 
   auto can_handler = static_callable<can, 0, void(void)>(isr).get_handler();
-  cortex_m::interrupt(value(irq::can)).enable(can_handler);
+  cortex_m::enable_interrupt(irq::can, can_handler);
 
   bit_modify(reg->IER).set(can_interrupts::received_message);
 }

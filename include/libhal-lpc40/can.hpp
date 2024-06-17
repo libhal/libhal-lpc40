@@ -56,7 +56,7 @@ public:
   can& operator=(can const& p_other) = delete;
   can(can&& p_other) noexcept = delete;
   can& operator=(can&& p_other) noexcept = delete;
-  ~can();
+  virtual ~can();
 
 private:
   void driver_configure(const settings& p_settings) override;

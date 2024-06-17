@@ -14,10 +14,10 @@
 
 #include <cstdint>
 
-#include <libhal-lpc40/interrupt_pin.hpp>
-
 #include <libhal-armcortex/interrupt.hpp>
 #include <libhal-lpc40/constants.hpp>
+#include <libhal-lpc40/interrupt.hpp>
+#include <libhal-lpc40/interrupt_pin.hpp>
 #include <libhal-lpc40/pin.hpp>
 #include <libhal-util/enum.hpp>
 
@@ -77,7 +77,7 @@ interrupt_pin::interrupt_pin(std::uint8_t p_port,  // NOLINT
   : m_port(p_port)
   , m_pin(p_pin)
 {
-  cortex_m::interrupt::initialize<value(irq::max)>();
+  initialize_interrupts();
   interrupt_pin::driver_configure(p_settings);
 }
 
@@ -107,7 +107,7 @@ void interrupt_pin::driver_configure(const settings& p_settings)
     .resistor(p_settings.resistor);
 
   // Enable interrupt for gpio and use interrupt handler as our handler.
-  cortex_m::interrupt(value(irq::gpio)).enable(interrupt_pin_handler);
+  cortex_m::enable_interrupt(irq::gpio, interrupt_pin_handler);
 
   if (p_settings.trigger == trigger_edge::both ||
       p_settings.trigger == trigger_edge::rising) {

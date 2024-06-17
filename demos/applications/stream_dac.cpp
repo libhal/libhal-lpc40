@@ -25,61 +25,16 @@
 
 #include "resources/uniq-BOMBORA.u8.pcm.h"
 
-void hard_fault()
-{
-  while (true) {
-    continue;
-  }
-}
-
-void bus_fault()
-{
-  while (true) {
-    continue;
-  }
-}
-
-void usage_fault()
-{
-  while (true) {
-    continue;
-  }
-}
-
 std::array<std::uint8_t, 128> samples{};
-
-class do_nothing_io_waiter : public hal::io_waiter
-{
-public:
-  do_nothing_io_waiter() = default;
-
-private:
-  void driver_wait() override
-  {
-  }
-
-  void driver_resume() noexcept override
-  {
-  }
-};
 
 void application()
 {
-  hal::cortex_m::interrupt::initialize<hal::value(hal::lpc40::irq::max)>();
-  hal::cortex_m::interrupt(hal::value(hal::cortex_m::irq::hard_fault))
-    .enable(hard_fault);
-  hal::cortex_m::interrupt(hal::value(hal::cortex_m::irq::usage_fault))
-    .enable(usage_fault);
-  hal::cortex_m::interrupt(hal::value(hal::cortex_m::irq::bus_fault))
-    .enable(bus_fault);
-
-  do_nothing_io_waiter waiter;
-  hal::lpc40::stream_dac_u8 dac(waiter);
+  hal::lpc40::stream_dac_u8 dac;
 
   while (true) {
     // Change to 8'000.0f for LOFI
     dac.write({
-      .sample_rate = 13'500.0f,
+      .sample_rate = 16'000.0f,
       .data = uniq_BOMBORA_u8_pcm,
     });
   }

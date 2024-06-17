@@ -73,8 +73,9 @@ public:
 
   uart(uart const& p_other) = delete;
   uart& operator=(uart const& p_other) = delete;
-  uart(uart&& p_other) noexcept;
-  uart& operator=(uart&& p_other) noexcept;
+  uart(uart&& p_other) noexcept = delete;
+  uart& operator=(uart&& p_other) noexcept = delete;
+  virtual ~uart() = default;
 
 private:
   void driver_configure(const settings& p_settings) override;

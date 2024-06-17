@@ -20,6 +20,7 @@
 #include <libhal-armcortex/interrupt.hpp>
 #include <libhal-lpc40/clock.hpp>
 #include <libhal-lpc40/constants.hpp>
+#include <libhal-lpc40/interrupt.hpp>
 #include <libhal-lpc40/power.hpp>
 #include <libhal-util/bit.hpp>
 #include <libhal-util/enum.hpp>
@@ -164,7 +165,7 @@ void uart::setup_receive_interrupt()
   }
 
   // Enable interrupt service routine.
-  cortex_m::interrupt(value(m_port.irq_number)).enable(handler);
+  cortex_m::enable_interrupt(m_port.irq_number, handler);
 
   // Enable uart interrupt signal
   bit_modify(reg->group2.interrupt_enable)
@@ -239,7 +240,7 @@ uart::uart(std::uint8_t p_port_number,
     hal::safe_throw(hal::operation_not_supported(this));
   }
 
-  cortex_m::interrupt::initialize<value(irq::max)>();
+  initialize_interrupts();
   uart::driver_configure(p_settings);
 }
 
@@ -250,7 +251,7 @@ uart::uart(const uart::port& p_port,
   , m_receive_buffer(p_receive_working_buffer.begin(),
                      p_receive_working_buffer.end())
 {
-  cortex_m::interrupt::initialize<value(irq::max)>();
+  initialize_interrupts();
   uart::driver_configure(p_settings);
 }
 

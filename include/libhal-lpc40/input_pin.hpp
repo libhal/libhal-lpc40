@@ -41,7 +41,7 @@ public:
   input_pin& operator=(input_pin const& p_other) = delete;
   input_pin(input_pin&& p_other) noexcept = delete;
   input_pin& operator=(input_pin&& p_other) noexcept = delete;
-  ~input_pin() = default;
+  virtual ~input_pin() = default;
 
 private:
   void driver_configure(const settings& p_settings) override;

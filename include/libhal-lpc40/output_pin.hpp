@@ -41,7 +41,7 @@ public:
   output_pin& operator=(output_pin const& p_other) = delete;
   output_pin(output_pin&& p_other) noexcept = delete;
   output_pin& operator=(output_pin&& p_other) noexcept = delete;
-  ~output_pin() = default;
+  virtual ~output_pin() = default;
 
 private:
   void driver_configure(const settings& p_settings) override;

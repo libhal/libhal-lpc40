@@ -16,6 +16,8 @@
 
 #include <cstdint>
 
+#include <libhal-armcortex/interrupt.hpp>
+
 /**
  * @brief libhal drivers for the lpc40 series of microcontrollers from NXP
  *
@@ -61,100 +63,94 @@ enum class peripheral : std::uint8_t
 };
 
 /// List of interrupt request numbers for this platform
-enum class irq : std::uint16_t
+enum class irq : cortex_m::irq_t
 {
   /// Watchdog Timer Interrupt
-  wdt = 16 + 0,
+  wdt = 0,
   /// Timer0 Interrupt
-  timer0 = 16 + 1,
+  timer0 = 1,
   /// Timer1 Interrupt
-  timer1 = 16 + 2,
+  timer1 = 2,
   /// Timer2 Interrupt
-  timer2 = 16 + 3,
+  timer2 = 3,
   /// Timer3 Interrupt
-  timer3 = 16 + 4,
+  timer3 = 4,
   /// UART0 Interrupt
-  uart0 = 16 + 5,
+  uart0 = 5,
   /// UART1 Interrupt
-  uart1 = 16 + 6,
+  uart1 = 6,
   /// UART2 Interrupt
-  uart2 = 16 + 7,
+  uart2 = 7,
   /// UART3 Interrupt
-  uart3 = 16 + 8,
+  uart3 = 8,
   /// PWM1 Interrupt
-  pwm1 = 16 + 9,
+  pwm1 = 9,
   /// I2C0 Interrupt
-  i2c0 = 16 + 10,
+  i2c0 = 10,
   /// I2C1 Interrupt
-  i2c1 = 16 + 11,
+  i2c1 = 11,
   /// I2C2 Interrupt
-  i2c2 = 16 + 12,
+  i2c2 = 12,
   /// Reserved
-  reserved0 = 16 + 13,
+  reserved0 = 13,
   /// SSP0 Interrupt
-  ssp0 = 16 + 14,
+  ssp0 = 14,
   /// SSP1 Interrupt
-  ssp1 = 16 + 15,
+  ssp1 = 15,
   /// PLL0 Lock (Main PLL) Interrupt
-  pll0 = 16 + 16,
+  pll0 = 16,
   /// Real Time Clock Interrupt
-  rtc = 16 + 17,
+  rtc = 17,
   /// External Interrupt 0 Interrupt
-  eint0 = 16 + 18,
+  eint0 = 18,
   /// External Interrupt 1 Interrupt
-  eint1 = 16 + 19,
+  eint1 = 19,
   /// External Interrupt 2 Interrupt
-  eint2 = 16 + 20,
+  eint2 = 20,
   /// External Interrupt 3 Interrupt
-  eint3 = 16 + 21,
+  eint3 = 21,
   /// A/D Converter Interrupt
-  adc = 16 + 22,
+  adc = 22,
   /// Brown-Out Detect Interrupt
-  bod = 16 + 23,
+  bod = 23,
   /// USB Interrupt
-  usb = 16 + 24,
+  usb = 24,
   /// CAN Interrupt
-  can = 16 + 25,
+  can = 25,
   /// General Purpose DMA Interrupt
-  dma = 16 + 26,
+  dma = 26,
   /// I2S Interrupt
-  i2s = 16 + 27,
+  i2s = 27,
   /// Ethernet Interrupt
-  enet = 16 + 28,
+  enet = 28,
   /// SD/MMC card I/F Interrupt
-  mci = 16 + 29,
+  mci = 29,
   /// Motor Control PWM Interrupt
-  mcpwm = 16 + 30,
+  mcpwm = 30,
   /// Quadrature Encoder Interface Interrupt
-  qei = 16 + 31,
+  qei = 31,
   /// PLL1 Lock (USB PLL) Interrupt
-  pll1 = 16 + 32,
+  pll1 = 32,
   /// USB Activity interrupt
-  usbactivity = 16 + 33,
+  usbactivity = 33,
   /// CAN Activity interrupt
-  canactivity = 16 + 34,
+  canactivity = 34,
   /// UART4 Interrupt
-  uart4 = 16 + 35,
+  uart4 = 35,
   /// SSP2 Interrupt
-  ssp2 = 16 + 36,
+  ssp2 = 36,
   /// LCD Interrupt
-  lcd = 16 + 37,
+  lcd = 37,
   /// GPIO Interrupt
-  gpio = 16 + 38,
+  gpio = 38,
   ///  PWM0 Interrupt
-  pwm0 = 16 + 39,
+  pwm0 = 39,
   ///  EEPROM Interrupt
-  eeprom = 16 + 40,
+  eeprom = 40,
   ///  CMP0 Interrupt
-  cmp0 = 16 + 41,
+  cmp0 = 41,
   ///  CMP1 Interrupt
-  cmp1 = 16 + 42,
+  cmp1 = 42,
   max,
-};
-/// Set of lpc40 specific error types
-enum class error_t
-{
-  requires_usage_of_external_oscillator,
-  baud_rate_impossible,
 };
 }  // namespace hal::lpc40
