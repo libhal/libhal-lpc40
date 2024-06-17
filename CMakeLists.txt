@@ -30,6 +30,7 @@ libhal_test_and_make_library(
   src/i2c.cpp
   src/uart.cpp
   src/interrupt_pin.cpp
+  src/interrupt.cpp
   src/adc.cpp
   src/spi.cpp
   src/dma.cpp

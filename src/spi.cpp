@@ -16,9 +16,9 @@
 
 #include <libhal-lpc40/spi.hpp>
 
-#include <libhal-armcortex/interrupt.hpp>
 #include <libhal-lpc40/clock.hpp>
 #include <libhal-lpc40/constants.hpp>
+#include <libhal-lpc40/interrupt.hpp>
 #include <libhal-lpc40/power.hpp>
 #include <libhal-util/bit.hpp>
 #include <libhal-util/spi.hpp>

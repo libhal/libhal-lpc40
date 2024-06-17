@@ -65,7 +65,7 @@ public:
   spi& operator=(spi const& p_other) = delete;
   spi(spi&& p_other) noexcept = delete;
   spi& operator=(spi&& p_other) noexcept = delete;
-  ~spi();
+  virtual ~spi();
 
 private:
   void driver_configure(const settings& p_settings) override;

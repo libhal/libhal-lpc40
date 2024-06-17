@@ -7,6 +7,7 @@
 #include <libhal-armcortex/interrupt.hpp>
 #include <libhal-lpc40/constants.hpp>
 #include <libhal-lpc40/dma.hpp>
+#include <libhal-lpc40/interrupt.hpp>
 #include <libhal-lpc40/power.hpp>
 #include <libhal-util/bit.hpp>
 #include <libhal-util/enum.hpp>
@@ -81,10 +82,14 @@ std::array<dma_channel*, dma_channel_count> dma_channel_reg{
 };
 
 std::array<hal::callback<void(void)>, dma_channel_count> dma_callbacks{
-  hal::cortex_m::interrupt::nop, hal::cortex_m::interrupt::nop,
-  hal::cortex_m::interrupt::nop, hal::cortex_m::interrupt::nop,
-  hal::cortex_m::interrupt::nop, hal::cortex_m::interrupt::nop,
-  hal::cortex_m::interrupt::nop, hal::cortex_m::interrupt::nop,
+  hal::cortex_m::default_interrupt_handler,
+  hal::cortex_m::default_interrupt_handler,
+  hal::cortex_m::default_interrupt_handler,
+  hal::cortex_m::default_interrupt_handler,
+  hal::cortex_m::default_interrupt_handler,
+  hal::cortex_m::default_interrupt_handler,
+  hal::cortex_m::default_interrupt_handler,
+  hal::cortex_m::default_interrupt_handler,
 };
 
 void handle_dma_interrupt() noexcept
@@ -104,10 +109,9 @@ void handle_dma_interrupt() noexcept
 
 void initialize_dma()
 {
-  hal::lpc40::power_on(hal::lpc40::peripheral::gpdma);
-  hal::cortex_m::interrupt::initialize<hal::value(hal::lpc40::irq::max)>();
-  hal::cortex_m::interrupt(hal::value(hal::lpc40::irq::dma))
-    .enable(handle_dma_interrupt);
+  power_on(peripheral::gpdma);
+  initialize_interrupts();
+  hal::cortex_m::enable_interrupt(irq::dma, handle_dma_interrupt);
   // Enable DMA & use default AHB endianness
   dma_reg->config = 1;
 }

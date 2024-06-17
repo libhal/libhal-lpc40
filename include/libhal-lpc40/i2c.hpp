@@ -97,7 +97,7 @@ public:
   i2c& operator=(i2c const& p_other) = delete;
   i2c(i2c&& p_other) noexcept = delete;
   i2c& operator=(i2c&& p_other) noexcept = delete;
-  ~i2c();
+  virtual ~i2c();
 
 private:
   void driver_configure(const settings& p_settings) override;

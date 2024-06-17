@@ -63,7 +63,7 @@ public:
   pwm& operator=(pwm const& p_other) = delete;
   pwm(pwm&& p_other) noexcept = delete;
   pwm& operator=(pwm&& p_other) noexcept = delete;
-  ~pwm() = default;
+  virtual ~pwm() = default;
 
 private:
   void driver_frequency(hertz p_frequency) override;
