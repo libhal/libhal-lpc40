@@ -82,10 +82,10 @@ enum class dma_peripheral : std::uint8_t
   uart2_rx_and_timer3_match1 = 15,
 };
 
-struct dma_configuration_t
+struct dma
 {
-  const volatile void* source;
-  volatile void* destination;
+  void const volatile* source;
+  void volatile* destination;
   std::size_t length;
   bool source_increment;
   bool destination_increment;
@@ -99,7 +99,6 @@ struct dma_configuration_t
   dma_burst_size destination_burst_size = dma_burst_size::bytes_1;
 };
 
-void initialize_dma();
-void setup_dma_transfer(const dma_configuration_t& p_configuration,
+void setup_dma_transfer(dma const& p_configuration,
                         hal::callback<void(void)> p_interrupt_callback);
 }  // namespace hal::lpc40

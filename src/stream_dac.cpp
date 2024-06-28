@@ -13,7 +13,6 @@ namespace hal::lpc40 {
 namespace {
 void setup_stream_dac()
 {
-  hal::lpc40::initialize_dma();
   hal::lpc40::pin(0, 26).function(0b010).dac(true);
 
   // Double buffering enabled (1)
@@ -27,21 +26,21 @@ void dac_dma_write(hal::io_waiter& p_waiter,
                    const typename hal::stream_dac<T>::samples& p_samples)
 {
   // Setup sampling frequency
-  const auto input_clock =
+  auto const input_clock =
     hal::lpc40::get_frequency(hal::lpc40::peripheral::dac);
-  const auto clock_count_value = input_clock / p_samples.sample_rate;
+  auto const clock_count_value = input_clock / p_samples.sample_rate;
   dac_reg->count_value = clock_count_value;
 
   auto data_remaining = p_samples.data;
 
   while (not data_remaining.empty()) {
     bool finished = false;
-    const auto transfer_amount =
+    auto const transfer_amount =
       std::min(data_remaining.size(), dma_max_transfer_size);
 
     if constexpr (std::is_same_v<std::uint8_t, T>) {
       hal::lpc40::setup_dma_transfer(
-        dma_configuration_t{
+        dma{
           .source = data_remaining.data(),
           .destination = &dac_reg->conversion_register.parts[1],
           .length = transfer_amount,
@@ -59,7 +58,7 @@ void dac_dma_write(hal::io_waiter& p_waiter,
         });
     } else if (std::is_same_v<std::uint16_t, T>) {
       hal::lpc40::setup_dma_transfer(
-        dma_configuration_t{
+        dma{
           .source = data_remaining.data(),
           .destination = &dac_reg->conversion_register.whole,
           .length = transfer_amount,
@@ -93,7 +92,7 @@ stream_dac_u8::stream_dac_u8(hal::io_waiter& p_waiter)
   setup_stream_dac();
 }
 
-void stream_dac_u8::driver_write(const hal::stream_dac_u8::samples& p_samples)
+void stream_dac_u8::driver_write(hal::stream_dac_u8::samples const& p_samples)
 {
   dac_dma_write<std::uint8_t>(*m_waiter, p_samples);
 }
@@ -104,7 +103,7 @@ stream_dac_u16::stream_dac_u16(hal::io_waiter& p_waiter)
   setup_stream_dac();
 }
 
-void stream_dac_u16::driver_write(const hal::stream_dac_u16::samples& p_samples)
+void stream_dac_u16::driver_write(hal::stream_dac_u16::samples const& p_samples)
 {
   dac_dma_write<std::uint16_t>(*m_waiter, p_samples);
 }

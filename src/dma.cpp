@@ -1,8 +1,7 @@
-#include <bit>
-#include <cstddef>
-#include <cstdint>
-
 #include <array>
+#include <atomic>
+#include <bit>
+#include <cstdint>
 
 #include <libhal-armcortex/interrupt.hpp>
 #include <libhal-lpc40/constants.hpp>
@@ -97,8 +96,8 @@ void handle_dma_interrupt() noexcept
   // The zero count from the LSB tells you where the least significant 1 is
   // located. This allows the handled DMA interrupt callback to start at 0 and
   // end at the last bit.
-  const auto status = std::countr_zero(dma_reg->interrupt_status);
-  const auto clear_mask = 1 << status;
+  auto const status = std::countr_zero(dma_reg->interrupt_status);
+  auto const clear_mask = 1 << status;
 
   dma_reg->interrupt_terminal_count_clear = clear_mask;
   dma_reg->interrupt_error_clear = clear_mask;
@@ -109,6 +108,10 @@ void handle_dma_interrupt() noexcept
 
 void initialize_dma()
 {
+  if (is_on(peripheral::gpdma)) {
+    return;
+  }
+
   power_on(peripheral::gpdma);
   initialize_interrupts();
   hal::cortex_m::enable_interrupt(irq::dma, handle_dma_interrupt);
@@ -116,10 +119,12 @@ void initialize_dma()
   dma_reg->config = 1;
 }
 
-void setup_dma_transfer(const dma_configuration_t& p_configuration,
+std::atomic_flag dma_busy = ATOMIC_FLAG_INIT;
+
+void setup_dma_transfer(dma const& p_configuration,
                         hal::callback<void(void)> p_interrupt_callback)
 {
-  const auto config_value =
+  auto const config_value =
     hal::bit_value()
       .insert<dma_config::source_peripheral>(
         hal::value(p_configuration.source_peripheral))
@@ -131,7 +136,7 @@ void setup_dma_transfer(const dma_configuration_t& p_configuration,
       .set<dma_config::terminal_count_interrupt_mask>()
       .to<std::uint32_t>();
 
-  const auto control_value =
+  auto const control_value =
     hal::bit_value()
       .insert<dma_control::transfer_size>(p_configuration.length)
       .insert<dma_control::source_burst_size>(
@@ -148,12 +153,18 @@ void setup_dma_transfer(const dma_configuration_t& p_configuration,
       .set<dma_control::enable_terminal_count_interrupt>()
       .to<std::uint32_t>();
 
+  while (dma_busy.test_and_set(std::memory_order_acquire)) {
+    continue;  // spin lock
+  }
+
+  initialize_dma();
+
   // Busy wait until a channel is available
   while (true) {
     // Count the number of 1s until you reach a zero. That zero will be the
     // available channel. If that zero is 8, then all 8 channels are currently
     // in use and cannot service this request.
-    const auto available_channel = std::countr_one(dma_reg->enabled_channels);
+    auto const available_channel = std::countr_one(dma_reg->enabled_channels);
 
     if (available_channel < 8) {
       // Copy callback to the callbacks
@@ -175,5 +186,7 @@ void setup_dma_transfer(const dma_configuration_t& p_configuration,
       break;
     }
   }
+
+  dma_busy.clear();
 }
 }  // namespace hal::lpc40
