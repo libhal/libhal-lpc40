@@ -59,7 +59,7 @@ public:
    */
   uart(std::uint8_t p_port_number,
        std::span<hal::byte> p_receive_working_buffer,
-       const serial::settings& p_settings = {});
+       serial::settings const& p_settings = {});
   /**
    * @brief Construct a new uart object
    *
@@ -67,9 +67,9 @@ public:
    * @param p_receive_working_buffer
    * @param p_settings
    */
-  uart(const uart::port& p_port,
+  uart(uart::port const& p_port,
        std::span<hal::byte> p_receive_working_buffer,
-       const serial::settings& p_settings = {});
+       serial::settings const& p_settings = {});
 
   uart(uart const& p_other) = delete;
   uart& operator=(uart const& p_other) = delete;
@@ -78,8 +78,8 @@ public:
   virtual ~uart() = default;
 
 private:
-  void driver_configure(const settings& p_settings) override;
-  write_t driver_write(std::span<const hal::byte> p_data) override;
+  void driver_configure(settings const& p_settings) override;
+  write_t driver_write(std::span<hal::byte const> p_data) override;
   read_t driver_read(std::span<hal::byte> p_data) override;
   void driver_flush() override;
 

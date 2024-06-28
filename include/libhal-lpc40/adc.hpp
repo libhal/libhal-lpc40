@@ -82,7 +82,7 @@ public:
    *
    * @param p_channel - Which adc channel to use
    */
-  adc(const channel& p_channel);
+  adc(channel const& p_channel);
 
   adc(adc const& p_other) = delete;
   adc& operator=(adc const& p_other) = delete;
@@ -94,6 +94,6 @@ private:
   channel get_predefined_channel_info(std::uint8_t p_channel);
   float driver_read() override;
 
-  volatile uint32_t* m_sample = nullptr;
+  uint32_t volatile* m_sample = nullptr;
 };
 }  // namespace hal::lpc40

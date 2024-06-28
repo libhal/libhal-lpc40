@@ -35,7 +35,7 @@ public:
    */
   output_pin(std::uint8_t p_port,
              std::uint8_t p_pin,
-             const output_pin::settings& p_settings = {});
+             output_pin::settings const& p_settings = {});
 
   output_pin(output_pin const& p_other) = delete;
   output_pin& operator=(output_pin const& p_other) = delete;
@@ -44,7 +44,7 @@ public:
   virtual ~output_pin() = default;
 
 private:
-  void driver_configure(const settings& p_settings) override;
+  void driver_configure(settings const& p_settings) override;
   void driver_level(bool p_high) override;
   bool driver_level() override;
 

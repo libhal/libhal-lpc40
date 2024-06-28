@@ -35,7 +35,7 @@ public:
    */
   input_pin(std::uint8_t p_port,
             std::uint8_t p_pin,
-            const input_pin::settings& p_settings = {});
+            input_pin::settings const& p_settings = {});
 
   input_pin(input_pin const& p_other) = delete;
   input_pin& operator=(input_pin const& p_other) = delete;
@@ -44,7 +44,7 @@ public:
   virtual ~input_pin() = default;
 
 private:
-  void driver_configure(const settings& p_settings) override;
+  void driver_configure(settings const& p_settings) override;
   bool driver_level() override;
 
   uint8_t m_port{};
