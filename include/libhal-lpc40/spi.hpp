@@ -53,7 +53,7 @@ public:
    * @throws hal::operation_not_supported - if the p_bus is not 0, 1, or 2 or if
    * the spi settings could not be achieved.
    */
-  spi(std::uint8_t p_bus, const spi::settings& p_settings = {});
+  spi(std::uint8_t p_bus, spi::settings const& p_settings = {});
   /**
    * @brief Construct a new spi object using bus info directly
    *
@@ -68,8 +68,8 @@ public:
   virtual ~spi();
 
 private:
-  void driver_configure(const settings& p_settings) override;
-  void driver_transfer(std::span<const hal::byte> p_data_out,
+  void driver_configure(settings const& p_settings) override;
+  void driver_transfer(std::span<hal::byte const> p_data_out,
                        std::span<hal::byte> p_data_in,
                        hal::byte p_filler) override;
 

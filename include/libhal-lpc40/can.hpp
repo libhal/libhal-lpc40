@@ -49,8 +49,8 @@ public:
     std::uint8_t tseg2 = 1;
   };
 
-  can(std::uint8_t p_port, const can::settings& p_settings = {});
-  can(const port& p_port, const can::settings& p_settings = {});
+  can(std::uint8_t p_port, can::settings const& p_settings = {});
+  can(port const& p_port, can::settings const& p_settings = {});
 
   can(can const& p_other) = delete;
   can& operator=(can const& p_other) = delete;
@@ -59,13 +59,13 @@ public:
   virtual ~can();
 
 private:
-  void driver_configure(const settings& p_settings) override;
+  void driver_configure(settings const& p_settings) override;
   void driver_bus_on() override;
-  void driver_send(const message_t& p_message) override;
+  void driver_send(message_t const& p_message) override;
 
-  void setup(const can::port& p_port, const can::settings& p_settings);
-  void configure_baud_rate(const can::port& p_port,
-                           const can::settings& p_settings);
+  void setup(can::port const& p_port, can::settings const& p_settings);
+  void configure_baud_rate(can::port const& p_port,
+                           can::settings const& p_settings);
   /**
    * @note This interrupt handler is used by both CAN1 and CAN2. This should
    *     only be called for a single CAN port to service both receive

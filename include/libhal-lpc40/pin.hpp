@@ -50,7 +50,7 @@ public:
    * @param p_function_code - the pin function code
    * @return pin& - reference to this pin for chaining
    */
-  const pin& function(uint8_t p_function_code) const;
+  pin const& function(uint8_t p_function_code) const;
 
   /**
    * @brief Set the internal resistor connection for this pin
@@ -58,7 +58,7 @@ public:
    * @param p_resistor - resistor type
    * @return pin& - reference to this pin for chaining
    */
-  const pin& resistor(hal::pin_resistor p_resistor) const;
+  pin const& resistor(hal::pin_resistor p_resistor) const;
 
   /**
    * @brief Disable or enable hysteresis mode for this pin
@@ -66,7 +66,7 @@ public:
    * @param p_enable - enable this mode, set to false to disable this mode
    * @return pin& - reference to this pin for chaining
    */
-  const pin& hysteresis(bool p_enable) const;
+  pin const& hysteresis(bool p_enable) const;
 
   /**
    * @brief invert the logic for this pin in input mode
@@ -74,7 +74,7 @@ public:
    * @param p_enable - enable this mode, set to false to disable this mode
    * @return pin& - reference to this pin for chaining
    */
-  const pin& input_invert(bool p_enable) const;
+  pin const& input_invert(bool p_enable) const;
 
   /**
    * @brief enable analog mode for this pin (required for dac and adc drivers)
@@ -82,7 +82,7 @@ public:
    * @param p_enable - enable this mode, set to false to disable this mode
    * @return pin& - reference to this pin for chaining
    */
-  const pin& analog(bool p_enable) const;
+  pin const& analog(bool p_enable) const;
 
   /**
    * @brief enable digital filtering (filter out noise on input lines)
@@ -90,7 +90,7 @@ public:
    * @param p_enable - enable this mode, set to false to disable this mode
    * @return pin& - reference to this pin for chaining
    */
-  const pin& digital_filter(bool p_enable) const;
+  pin const& digital_filter(bool p_enable) const;
 
   /**
    * @brief Enable high speed mode for i2c pins
@@ -98,7 +98,7 @@ public:
    * @param p_enable - enable this mode, set to false to disable this mode
    * @return pin& - reference to this pin for chaining
    */
-  const pin& highspeed_i2c(bool p_enable = true) const;
+  pin const& highspeed_i2c(bool p_enable = true) const;
 
   /**
    * @brief enable high slew rate for pin
@@ -106,7 +106,7 @@ public:
    * @param p_enable - enable this mode, set to false to disable this mode
    * @return pin& - reference to this pin for chaining
    */
-  const pin& high_slew_rate(bool p_enable = true) const;
+  pin const& high_slew_rate(bool p_enable = true) const;
 
   /**
    * @brief enable high current drain for i2c lines
@@ -114,7 +114,7 @@ public:
    * @param p_enable - enable this mode, set to false to disable this mode
    * @return pin& - reference to this pin for chaining
    */
-  const pin& i2c_high_current(bool p_enable = true) const;
+  pin const& i2c_high_current(bool p_enable = true) const;
 
   /**
    * @brief Make the pin open drain (required for the i2c driver)
@@ -122,7 +122,7 @@ public:
    * @param p_enable - enable this mode, set to false to disable this mode
    * @return pin& - reference to this pin for chaining
    */
-  const pin& open_drain(bool p_enable = true) const;
+  pin const& open_drain(bool p_enable = true) const;
 
   /**
    * @brief Enable dac mode (required for the dac driver)
@@ -130,7 +130,7 @@ public:
    * @param p_enable - enable this mode, set to false to disable this mode
    * @return pin& - reference to this pin for chaining
    */
-  const pin& dac(bool p_enable = true) const;
+  pin const& dac(bool p_enable = true) const;
 
 private:
   std::uint8_t m_port{};

@@ -36,7 +36,7 @@ namespace hal::lpc40 {
 class i2c final : public hal::i2c
 {
 public:
-  using write_iterator = std::span<const hal::byte>::iterator;
+  using write_iterator = std::span<hal::byte const>::iterator;
   using read_iterator = std::span<hal::byte>::iterator;
 
   /// port holds all of the information for an i2c bus on the LPC40xx
@@ -73,7 +73,7 @@ public:
    * is not 0, 1, or 2.
    */
   i2c(std::uint8_t p_bus,
-      const i2c::settings& p_settings = {},
+      i2c::settings const& p_settings = {},
       hal::io_waiter& p_waiter = hal::polling_io_waiter());
 
   /**
@@ -89,8 +89,8 @@ public:
    * @throws hal::operation_not_supported - if the settings or bus info
    * designation could not be achieved.
    */
-  i2c(const bus_info& p_bus_info,
-      const i2c::settings& p_settings = {},
+  i2c(bus_info const& p_bus_info,
+      i2c::settings const& p_settings = {},
       hal::io_waiter& p_waiter = hal::polling_io_waiter());
 
   i2c(i2c const& p_other) = delete;
@@ -100,10 +100,10 @@ public:
   virtual ~i2c();
 
 private:
-  void driver_configure(const settings& p_settings) override;
+  void driver_configure(settings const& p_settings) override;
   void driver_transaction(
     hal::byte p_address,
-    std::span<const hal::byte> p_data_out,
+    std::span<hal::byte const> p_data_out,
     std::span<hal::byte> p_data_in,
     hal::function_ref<hal::timeout_function> p_timeout) override;
   void setup_interrupt();
