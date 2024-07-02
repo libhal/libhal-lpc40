@@ -55,7 +55,7 @@ class libhal_lpc40_conan(ConanFile):
             self,
             override_libhal_util_version="5.0.1",
             override_libhal_version="4.2.0")
-        self.requires("libhal-armcortex/[^5.0.0]", transitive_headers=True)
+        self.requires("libhal-armcortex/[^5.0.1]", transitive_headers=True)
         self.requires("ring-span-lite/[^0.7.0]", transitive_headers=True)
 
     def add_linker_scripts_to_link_flags(self):

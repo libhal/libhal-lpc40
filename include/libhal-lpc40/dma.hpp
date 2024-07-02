@@ -52,14 +52,14 @@ enum class dma_transfer_width : std::uint8_t
 
 enum class dma_burst_size : std::uint8_t
 {
-  bytes_1 = 0b000,    // - 1 bytes
-  bytes_4 = 0b001,    // - 4 bytes
-  bytes_8 = 0b010,    // - 8 bytes
-  bytes_16 = 0b011,   // - 16 bytes
-  bytes_32 = 0b100,   // - 32 bytes
-  bytes_64 = 0b101,   // - 64 bytes
-  bytes_128 = 0b110,  // - 128 bytes
-  bytes_256 = 0b111,  // - 256 bytes
+  bytes_1 = 0b000,
+  bytes_4 = 0b001,
+  bytes_8 = 0b010,
+  bytes_16 = 0b011,
+  bytes_32 = 0b100,
+  bytes_64 = 0b101,
+  bytes_128 = 0b110,
+  bytes_256 = 0b111,
 };
 
 enum class dma_peripheral : std::uint8_t
