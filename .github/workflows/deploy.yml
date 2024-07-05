@@ -1,0 +1,27 @@
+name: 🚀 Deploy
+
+on:
+  workflow_dispatch:
+
+jobs:
+  cortex-m4_lpc4072_74:
+    uses: libhal/ci/.github/workflows/deploy.yml@5.x.y
+    with:
+      arch: cortex-m4
+      version: ${{ github.ref_name }}
+      os: baremetal
+      compiler: gcc
+      compiler_version: 12.3
+      compiler_package: arm-gnu-toolchain
+    secrets: inherit
+
+  cortex-m4f_lpc4076_78_88:
+    uses: libhal/ci/.github/workflows/deploy.yml@5.x.y
+    with:
+      arch: cortex-m4f
+      version: ${{ github.ref_name }}
+      os: baremetal
+      compiler: gcc
+      compiler_version: 12.3
+      compiler_package: arm-gnu-toolchain
+    secrets: inherit

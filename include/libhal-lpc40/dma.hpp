@@ -4,6 +4,7 @@
 #include <cstdint>
 
 #include <libhal/functional.hpp>
+#include <libhal/lock.hpp>
 
 namespace hal::lpc40 {
 
@@ -99,6 +100,26 @@ struct dma
   dma_burst_size destination_burst_size = dma_burst_size::bytes_1;
 };
 
+/**
+ * @brief Set the dma lock object
+ *
+ * This API is not thread safe and should be performed before dma is used
+ * between threads. The default dma lock object is a hal::atomic_spin_lock which
+ * is operating system agnostic but inefficient. If you are using an operating
+ * system, use this call to replace the original spin lock with the appropriate
+ * mutex.
+ *
+ * @param p_lock - basic lock to be used for locking dma across threads. Should
+ * be a OS safe mutex.
+ */
+void set_dma_lock(hal::basic_lock& p_lock);
+
+/**
+ * @brief Setup and start a dma transfer
+ *
+ * @param p_configuration - dma configuration
+ * @param p_interrupt_callback - callback when dma has completed
+ */
 void setup_dma_transfer(dma const& p_configuration,
                         hal::callback<void(void)> p_interrupt_callback);
 }  // namespace hal::lpc40
