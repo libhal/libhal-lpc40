@@ -1,45 +1,49 @@
+#include <cstdint>
+
 #include <array>
 #include <atomic>
 #include <bit>
-#include <cstdint>
+#include <mutex>
 
 #include <libhal-armcortex/interrupt.hpp>
 #include <libhal-lpc40/constants.hpp>
 #include <libhal-lpc40/dma.hpp>
 #include <libhal-lpc40/interrupt.hpp>
 #include <libhal-lpc40/power.hpp>
+#include <libhal-soft/atomic_spin_lock.hpp>
 #include <libhal-util/bit.hpp>
 #include <libhal-util/enum.hpp>
 #include <libhal/functional.hpp>
+#include <libhal/lock.hpp>
 #include <libhal/units.hpp>
 
 namespace hal::lpc40 {
-
+namespace {
 struct dma_channel
 {
-  volatile std::uint32_t source_address;
-  volatile std::uint32_t destination_address;
-  volatile std::uint32_t linked_list_item;
-  volatile std::uint32_t control;
-  volatile std::uint32_t config;
+  std::uint32_t volatile source_address;
+  std::uint32_t volatile destination_address;
+  std::uint32_t volatile linked_list_item;
+  std::uint32_t volatile control;
+  std::uint32_t volatile config;
 };
 
 struct gpdma
 {
-  volatile std::uint32_t interrupt_status;
-  volatile std::uint32_t interrupt_terminal_count_status;
-  volatile std::uint32_t interrupt_terminal_count_clear;
-  volatile std::uint32_t interrupt_error_status;
-  volatile std::uint32_t interrupt_error_clear;
-  volatile std::uint32_t raw_interrupt_terminal_count_status;
-  volatile std::uint32_t raw_interrupt_error_status;
-  volatile std::uint32_t enabled_channels;
-  volatile std::uint32_t SOFTBREQ;
-  volatile std::uint32_t SOFTSREQ;
-  volatile std::uint32_t SOFTLBREQ;
-  volatile std::uint32_t SOFTLSREQ;
-  volatile std::uint32_t config;
-  volatile std::uint32_t sync;
+  std::uint32_t volatile interrupt_status;
+  std::uint32_t volatile interrupt_terminal_count_status;
+  std::uint32_t volatile interrupt_terminal_count_clear;
+  std::uint32_t volatile interrupt_error_status;
+  std::uint32_t volatile interrupt_error_clear;
+  std::uint32_t volatile raw_interrupt_terminal_count_status;
+  std::uint32_t volatile raw_interrupt_error_status;
+  std::uint32_t volatile enabled_channels;
+  std::uint32_t volatile SOFTBREQ;
+  std::uint32_t volatile SOFTSREQ;
+  std::uint32_t volatile SOFTLBREQ;
+  std::uint32_t volatile SOFTLSREQ;
+  std::uint32_t volatile config;
+  std::uint32_t volatile sync;
 };
 
 namespace dma_control {
@@ -119,7 +123,14 @@ void initialize_dma()
   dma_reg->config = 1;
 }
 
-std::atomic_flag dma_busy = ATOMIC_FLAG_INIT;
+hal::soft::atomic_spin_lock dma_spin_lock;
+hal::basic_lock* dma_lock = &dma_spin_lock;
+}  // namespace
+
+void set_dma_lock(hal::basic_lock& p_lock)
+{
+  dma_lock = &p_lock;
+}
 
 void setup_dma_transfer(dma const& p_configuration,
                         hal::callback<void(void)> p_interrupt_callback)
@@ -153,9 +164,7 @@ void setup_dma_transfer(dma const& p_configuration,
       .set<dma_control::enable_terminal_count_interrupt>()
       .to<std::uint32_t>();
 
-  while (dma_busy.test_and_set(std::memory_order_acquire)) {
-    continue;  // spin lock
-  }
+  std::lock_guard take_dma_lock(*dma_lock);
 
   initialize_dma();
 
@@ -186,7 +195,5 @@ void setup_dma_transfer(dma const& p_configuration,
       break;
     }
   }
-
-  dma_busy.clear();
 }
 }  // namespace hal::lpc40
